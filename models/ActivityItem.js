@@ -1,7 +1,10 @@
 import mongoose from "mongoose";
 
 const ActivityItem = new mongoose.Schema({
-	item: [{ type: String }],
+	item: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Inventory',
+	  },
 	qty : {type : Number},
 	description : {type : String},
 	brand : {type : String},

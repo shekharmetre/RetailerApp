@@ -24,8 +24,17 @@ export const fetchingActivity = async (req, resp) => {
 	  const dateString = `${date}${month}${year}`;
 	  // Assuming that 'date' is a field in your AItem schema
 	  await MongodbConnection();
-	  const response = await AItem.find({ date: dateString });
-	  resp.send(response)
+	  const response = await AItem.find({ date: dateString }).populate('item');
+	  const inventoryWithBase64 = response.map(item => {
+		if (item.item?.image && item?.item?.image instanceof Buffer) {
+		  const base64Data = item?.item?.image.toString('base64');
+		  return { ...item._doc, image: base64Data };
+		}
+		return item;
+	  });
+	  console.log(inventoryWithBase64)
+  
+	  resp.json(inventoryWithBase64);
 	} catch (error) {
 	  resp.status(500).send(error.message);
 	}
