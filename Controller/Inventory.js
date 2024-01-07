@@ -1,57 +1,38 @@
 import MongodbConnection from "../Util/MongodbConnection.js";
 import Inventory from "../models/Inventory.js";
-
-const imageUrlToBuffer = async (imageUrl) => {
-  try {
-    // Make a GET request to the image URL
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-
-    // Create a Buffer from the response data
-    const imageBuffer = Buffer.from(response.data, 'binary');
-
-    return imageBuffer;
-  } catch (error) {
-    console.error('Error fetching or converting image:', error);
-    throw error; // You may want to handle this error according to your needs
-  }
-};
-
-const imageurl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFmMOsazWl9rOTMKcL5-SazgrMIumNifVzKg&usqp=CAU'
-
+import User from "../models/User.js";
 
 export const createInventory = async (req, resp) => {
-  const { name, stock, mrp, brand, attribute } = req.body;
+  const { email , name, stock, mrp, brand, attribute } = req.body;
   const buffer = req.file
-  MongodbConnection();
+ await MongodbConnection();
   try {
-    const inventory = await Inventory.create({ name, stock, mrp, brand, attribute, image:buffer ? buffer.buffer : ""})
-    inventory.save();
-    resp.send(inventory);
-  } catch (error) {
-    resp.send(error)
-  }
+	  const user = await User.findOne({ email });
+
+	  if (!user) {
+		return resp.status(404).send('User not found');
+	  }
+	  const createdInvenotry = await Inventory.create({name,stock,mrp,brand,attribute,image:buffer ? buffer.buffer : ""});
+	  user.inventory.addToSet(createdInvenotry._id);
+  	  await user.save();
+	  resp.send(createdInvenotry)
+	} catch (error) {
+	  resp.status(500).send(error.message);
+	}
 };
 
 export const fetchInventory = async (req, resp) => {
-  MongodbConnection();
+  const {email} = req.params;
+  await MongodbConnection();
   try {
-    const inventory = await Inventory.find({});
-
-    // Convert Buffer data to base64
-    const inventoryWithBase64 = inventory.map(item => {
-      if (item.image && item.image instanceof Buffer) {
-        const base64Data = item.image.toString('base64');
-        return { ...item._doc, image: base64Data };
-      }
-      return item;
-    });
-
-    resp.json(inventoryWithBase64);
-  } catch (error) {
-    console.error('Error fetching inventory:', error);
-    resp.status(500).json({ error: 'Internal server error' });
-  }
+	  const user = await User.findOne({ email }).populate('inventory');
+	  // Filter activities based on the provided date
+	  resp.json(user.inventory);
+	} catch (error) {
+	  resp.status(500).send(error.message);
+	}
 };
+
 
 export const UpdateInventory = async (req, resp) => {
   const {name,stock,mrp,brand,attribute} = req.body;

@@ -16,7 +16,7 @@ const ActivityItem = new mongoose.Schema({
 	time : {type:String},
 },{timestamps:true})
 
-const AItem = mongoose.model("Aitem",ActivityItem)
+const Activity = mongoose.model("Activity",ActivityItem)
 
 
-export default AItem;
+export default Activity;
