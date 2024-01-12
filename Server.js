@@ -20,13 +20,8 @@ app.use('/activity',ActivityRoutes)
 
 
 app.get('/',(req,resp)=>{
-	resp.send("helowod")
+	resp.send("thhis is a new updates")
 })
-
-
-
-
-
 
 server.listen(PORT,()=>{
 	console.log('server started on ' + PORT)
